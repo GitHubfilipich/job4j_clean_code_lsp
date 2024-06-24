@@ -8,25 +8,57 @@ public class SimpleMenu implements Menu {
 
     @Override
     public boolean add(String parentName, String childName, ActionDelegate actionDelegate) {
-   /*  добавьте реализацию*/
+        List<MenuItem> parent = null;
+        if (Objects.equals(parentName, Menu.ROOT)) {
+            parent = rootElements;
+        } else {
+            Optional<ItemInfo> parentItemInfo = findItem(parentName);
+            if (parentItemInfo.isPresent()) {
+                parent = parentItemInfo.get().menuItem.getChildren();
+            }
+        }
+        if (parent != null) {
+            parent.add(new SimpleMenuItem(childName, actionDelegate));
+            return true;
+        }
         return  false;
     }
 
     @Override
     public Optional<MenuItemInfo> select(String itemName) {
-        /*  добавьте реализацию*/
-        return null;
+        return findItem(itemName).map(itemInfo -> new MenuItemInfo(itemInfo.menuItem, itemInfo.number));
     }
 
     @Override
     public Iterator<MenuItemInfo> iterator() {
-        /*  добавьте реализацию*/
-        return null;
+        return new Iterator<MenuItemInfo>() {
+            private final DFSIterator iterator = new DFSIterator();
+
+            @Override
+            public boolean hasNext() {
+                return iterator.hasNext();
+            }
+
+            @Override
+            public MenuItemInfo next() {
+                ItemInfo itemInfo = iterator.next();
+                return new MenuItemInfo(itemInfo.menuItem, itemInfo.number);
+            }
+        };
     }
 
     private Optional<ItemInfo> findItem(String name) {
-        /*  добавьте реализацию*/
-        return null;
+        DFSIterator iterator = new DFSIterator();
+        ItemInfo result = null;
+        while (iterator.hasNext()) {
+            result = iterator.next();
+            if (result.menuItem.getName() != null && result.menuItem.getName().equals(name)) {
+                break;
+            } else {
+                result = null;
+            }
+        }
+        return Optional.ofNullable(result);
     }
 
     private static class SimpleMenuItem implements MenuItem {
@@ -58,9 +90,9 @@ public class SimpleMenu implements Menu {
 
     private class DFSIterator implements Iterator<ItemInfo> {
 
-        Deque<MenuItem> stack = new LinkedList<>();
+        private Deque<MenuItem> stack = new LinkedList<>();
 
-        Deque<String> numbers = new LinkedList<>();
+        private Deque<String> numbers = new LinkedList<>();
 
         DFSIterator() {
             int number = 1;
@@ -94,8 +126,8 @@ public class SimpleMenu implements Menu {
 
     private class ItemInfo {
 
-        MenuItem menuItem;
-        String number;
+        private MenuItem menuItem;
+        private String number;
 
         public ItemInfo(MenuItem menuItem, String number) {
             this.menuItem = menuItem;
